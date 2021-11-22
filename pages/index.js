@@ -114,7 +114,7 @@ export default function Home() {
                   <div className="card-footer">
                     {url && (
                       <div className="card-footer-item">
-                        <a href={url} target="_blank" className="button is-rounded is-fullwidth">
+                        <a href={url} target="_blank" rel="noreferrer" className="button is-rounded is-fullwidth">
                           Чо это где это?
                         </a>
                       </div>
