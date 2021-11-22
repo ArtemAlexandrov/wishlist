@@ -4,6 +4,7 @@ import {useEffect, useRef, useState} from 'react'
 import styles from "../styles/_home.module.css"
 import useSWR from 'swr'
 import Head from 'next/head'
+import Image from 'next/image'
 
 
 const fetcher = (url) => fetch(url).then((res) => res.json())
@@ -102,7 +103,7 @@ export default function Home() {
                   </div>
                   <div className="card-image">
                     <figure className="image is-1by1">
-                      <img src={imageUrl}
+                      <Image src={imageUrl}
                            alt="Placeholder image"/>
                     </figure>
                   </div>
