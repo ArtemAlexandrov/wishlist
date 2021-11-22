@@ -104,6 +104,7 @@ export default function Home() {
                   <div className="card-image">
                     <figure className="image is-1by1">
                       <Image src={imageUrl}
+                             layout='fill'
                            alt="Placeholder image"/>
                     </figure>
                   </div>
