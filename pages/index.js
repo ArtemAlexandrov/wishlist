@@ -136,7 +136,7 @@ export default function Home({items}) {
   )
 }
 
-export async function getStaticProps({ preview = false }) {
+export async function getServerSideProps({ preview = false }) {
 
   const response = await fetch("https://api-eu-central-1.graphcms.com/v2/ckwax1zmh2wb401z2gz0pfxhh/master", {
     method: 'post',
