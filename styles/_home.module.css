@@ -1,0 +1,7 @@
+.wishCards {
+  display: grid;
+    grid-column: auto;
+    grid-template-columns: repeat(auto-fill, minmax(min-content, 400px));
+    padding: 10px;
+  grid-gap: 1em;
+}
