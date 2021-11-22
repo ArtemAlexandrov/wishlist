@@ -9,12 +9,48 @@ import Image from 'next/image'
 
 const fetcher = (url) => fetch(url).then((res) => res.json())
 
-export default function Home() {
+const WishItem = props => (
+  <div className={"card"}>
+    <div className="card-header">
+      <div className="card-header-title">
+        {props.itemName}
+      </div>
+    </div>
+    <div className="card-image">
+      <figure className="image is-1by1">
+        <Image src={props.src}
+               layout="fill"
+               alt="Placeholder image"/>
+      </figure>
+    </div>
+    <div className="card-content">
+      <div className="content">
+        {props.description}
+      </div>
+    </div>
+    <div className="card-footer">
+      {props.url && (
+        <div className="card-footer-item">
+          <a href={props.url} target="_blank" rel="noreferrer"
+             className="button is-rounded is-fullwidth">
+            Чо это где это?
+          </a>
+        </div>
+      )}
+      <div className="card-footer-item">
+        <button className="button is-primary is-rounded is-fullwidth">
+          Вот это збс!
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+export default function Home({items}) {
 
   const [email, setEmail] = useState("");
   const [modalIsActive, toggleModal] = useState(false)
 
-  const { data, error } = useSWR('/api/get_items', fetcher)
 
   const emailInputRef = useRef();
 
@@ -61,11 +97,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/*items*/}
-
-
-
-
             <div className={classNames(
               "modal", {
                 "is-active": modalIsActive
@@ -94,44 +125,39 @@ export default function Home() {
 
           <div className={styles.wishCards}>
             {
-              data?.data.wishItems.map(({id, itemName, description, url, image: {url: imageUrl}}) => (
-                <div className={"card"} key={id}>
-                  <div className="card-header">
-                    <div className="card-header-title">
-                      {itemName}
-                    </div>
-                  </div>
-                  <div className="card-image">
-                    <figure className="image is-1by1">
-                      <Image src={imageUrl}
-                             layout='fill'
-                           alt="Placeholder image"/>
-                    </figure>
-                  </div>
-                  <div className="card-content">
-                    <div className="content">
-                      {description}
-                    </div>
-                  </div>
-                  <div className="card-footer">
-                    {url && (
-                      <div className="card-footer-item">
-                        <a href={url} target="_blank" rel="noreferrer" className="button is-rounded is-fullwidth">
-                          Чо это где это?
-                        </a>
-                      </div>
-                    )}
-                    <div className="card-footer-item">
-                      <button className="button is-primary is-rounded is-fullwidth">
-                        Вот это збс!
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              items.map(({id, itemName, description, url, image: {url: imageUrl}}) => (
+                <WishItem key={id} itemName={itemName} src={imageUrl}
+                          description={description} url={url}/>
               ))
             }
           </div>
         </div>
       </div>
   )
+}
+
+export async function getStaticProps({ preview = false }) {
+
+  const response = await fetch("https://api-eu-central-1.graphcms.com/v2/ckwax1zmh2wb401z2gz0pfxhh/master", {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({query:`{
+  wishItems {
+    id
+    itemName
+    description
+    url
+    image {
+      url
+    }
+  } 
+}`
+    })});
+  const data = await response.json()
+
+  return {
+    props: { items: data?.data.wishItems || [] },
+  }
 }
