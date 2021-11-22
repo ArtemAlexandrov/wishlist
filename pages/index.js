@@ -5,6 +5,7 @@ import styles from "../styles/_home.module.css"
 import useSWR from 'swr'
 import Head from 'next/head'
 import Image from 'next/image'
+import {ExternalIcon} from "../src/icons/external.svg";
 
 
 const fetcher = (url) => fetch(url).then((res) => res.json())
@@ -34,6 +35,9 @@ const WishItem = props => (
           <a href={props.url} target="_blank" rel="noreferrer"
              className="button is-rounded is-fullwidth">
             Чо это где это?
+            <span className="icon is-small" style={{paddingLeft: 10}}>
+              <ExternalIcon />
+            </span>
           </a>
         </div>
       )}
