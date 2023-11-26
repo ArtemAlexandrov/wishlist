@@ -2,15 +2,63 @@ import Link from 'next/link'
 import classNames from 'classnames'
 import {useEffect, useRef, useState} from 'react'
 import styles from "../styles/_home.module.css"
-import useSWR from 'swr'
 import Head from 'next/head'
 import Image from 'next/image'
 import {ExternalIcon} from "../src/icons/external.svg";
 
+const URL = "https://api-eu-central-1-shared-euc1-02.hygraph.com/v2/clpb9gcjd5srb01t7f29f7pd8/master"
+const FAST_URL = "https://eu-central-1-shared-euc1-02.cdn.hygraph.com/content/clpb9gcjd5srb01t7f29f7pd8/master"
 
-const fetcher = (url) => fetch(url).then((res) => res.json())
+const send = async (json, fast = false) => {
+  return await fetch(fast ? FAST_URL : URL, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(json)});
+}
 
-const WishItem = props => (
+const toogleBookItem = async (id, state) => {
+  const mutation = `mutation ToogleBooked($state: Boolean!, $id: ID!) {
+  updateWishlistItem(data: {booked: $state}, where: {id: $id}) {
+    id
+  }
+}`
+  try {
+    await send({
+      query: mutation,
+      variables: {
+        state, id
+      }
+    });
+  } catch (error) {
+    console.error("ERROR TOOGLE", error)
+  }
+}
+
+const loadItems = async () => {
+  const response = await send({query:`{
+      wishlistItems {
+        id
+        title
+        description
+        linkUrl
+        image {
+          url
+        }
+        booked
+      }
+    }`
+    }, true);
+  const data = await response.json()
+
+  return data?.data.wishlistItems || [];
+}
+
+const WishItem = props => {
+  const [booked, setBooked] = useState(props.booked)
+
+  return (
   <div className={"card"}>
     <div className="card-header">
       <div className="card-header-title">
@@ -18,7 +66,7 @@ const WishItem = props => (
       </div>
     </div>
     <div className="card-image">
-      <figure className="image is-1by1">
+      <figure className={classNames("image", styles.wishImage)}>
         <Image src={props.src}
                layout="fill"
                alt="Placeholder image"/>
@@ -42,36 +90,29 @@ const WishItem = props => (
         </div>
       )}
       <div className="card-footer-item">
-        <button className="button is-primary is-rounded is-fullwidth">
-          Вот это збс!
-        </button>
+          <button className={classNames("button is-rounded is-fullwidth", {
+            "is-primary": !booked,
+            "is-danger": booked,
+            "is-warning": false
+          })}
+          onClick={() => {
+            setBooked(!booked)
+            toogleBookItem(props.id, !booked)
+          }}
+          >
+            Вот это збс!
+          </button>
       </div>
     </div>
   </div>
-);
+)};
 
-export default function Home({items}) {
-
-  const [email, setEmail] = useState("");
-  const [modalIsActive, toggleModal] = useState(false)
-
-
-  const emailInputRef = useRef();
-
+export default function Home() {
+  const [items, setItems] = useState([])
   useEffect(() => {
-    const cachedEmail = global.localStorage?.getItem('email')
-    if (cachedEmail) {
-      setEmail(cachedEmail)
-    }
+    const run = async () => setItems(await loadItems())
+    run()
   }, [])
-  useEffect(() => {
-    global.localStorage.setItem('email', email)
-  }, [email])
-  useEffect(() => {
-    if (modalIsActive) {
-      emailInputRef.current.focus()
-    }
-  }, [modalIsActive])
 
   return (
       <div>
@@ -95,42 +136,16 @@ export default function Home({items}) {
                     Wish List
                   </a>
                 </Link>
-                <a className="navbar-item" onClick={() => toggleModal(true)}>
-                  { email ? email : "Who Am I?" }
-                </a>
               </div>
-            </div>
-
-            <div className={classNames(
-              "modal", {
-                "is-active": modalIsActive
-              }
-            )
-              }>
-              <div
-             className="modal-background" onClick={() => toggleModal(false)}/>
-              <div className="modal-content">
-                <input className="input" type="email"
-                       ref={emailInputRef}
-                       value={email}
-                       onKeyUp={event => {
-                         if (event.keyCode === 13) {
-                           toggleModal(false)
-                         }
-                       }}
-                       onChange={event => setEmail(event.target.value)}
-                       placeholder="Your email"/>
-                </div>
-              <button className="modal-close is-large"
-                      onClick={() => toggleModal(false)}
-                      aria-label="close"/>
             </div>
           </nav>
 
           <div className={styles.wishCards}>
             {
-              items.map(({id, itemName, description, url, image: {url: imageUrl}}) => (
+              items.map(({id, title: itemName, description, linkUrl: url, image: {url: imageUrl}, booked}) => (
                 <WishItem key={id} itemName={itemName} src={imageUrl}
+                          id={id}
+                          booked={booked}
                           description={description} url={url}/>
               ))
             }
@@ -138,30 +153,4 @@ export default function Home({items}) {
         </div>
       </div>
   )
-}
-
-export async function getServerSideProps({ preview = false }) {
-
-  const response = await fetch("https://api-eu-central-1.graphcms.com/v2/ckwax1zmh2wb401z2gz0pfxhh/master", {
-    method: 'post',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({query:`{
-  wishItems {
-    id
-    itemName
-    description
-    url
-    image {
-      url
-    }
-  } 
-}`
-    })});
-  const data = await response.json()
-
-  return {
-    props: { items: data?.data.wishItems || [] },
-  }
 }

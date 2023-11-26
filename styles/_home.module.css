@@ -5,3 +5,10 @@
     padding: 10px;
   grid-gap: 1em;
 }
+
+.wishImage {
+  min-height: 300px;
+}
+.wishImage img {
+  object-fit: cover;
+}
