@@ -48,7 +48,7 @@ const toogleBookItem = async (id, state) => {
 
 const loadItems = async () => {
   const response = await send({query:`{
-      wishlistItems {
+      wishlistItems(first: 50) {
         id
         title
         description
