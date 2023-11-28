@@ -18,9 +18,19 @@ const send = async (json, fast = false) => {
     body: JSON.stringify(json)});
 }
 
+const iAmBookThat = id => !!localStorage[id]
+
 const toogleBookItem = async (id, state) => {
+  if (state) {
+    localStorage[id] = true
+  } else {
+    delete localStorage[id]
+  }
   const mutation = `mutation ToogleBooked($state: Boolean!, $id: ID!) {
   updateWishlistItem(data: {booked: $state}, where: {id: $id}) {
+    id
+  }
+  publishWishlistItem(where: {id: $id}, to: PUBLISHED) {
     id
   }
 }`
@@ -92,15 +102,24 @@ const WishItem = props => {
       <div className="card-footer-item">
           <button className={classNames("button is-rounded is-fullwidth", {
             "is-primary": !booked,
-            "is-danger": booked,
-            "is-warning": false
+            "is-danger": booked && !iAmBookThat(props.id),
+            "is-warning": booked && iAmBookThat(props.id)
           })}
           onClick={() => {
+            if (booked && !iAmBookThat(props.id)) {
+              return
+            }
             setBooked(!booked)
             toogleBookItem(props.id, !booked)
           }}
           >
-            Вот это збс!
+            {
+              booked 
+                ? iAmBookThat(props.id)
+                  ? "Я передумал" 
+                  : "Занято"
+                : "Вот это збс!"
+            }
           </button>
       </div>
     </div>
@@ -123,18 +142,14 @@ export default function Home() {
           <nav className="navbar" role="navigation"
                aria-label="main navigation">
             <div className="navbar-brand">
-              <Link href='/'>
-                <a className="navbar-item" >
+              <Link href='/' className="navbar-item">
                   AAA Wish List
-                </a>
               </Link>
             </div>
             <div className="navbar-menu">
               <div className="navbar-start">
-                <Link href='/'>
-                  <a className="navbar-item">
+                <Link href='/' className='navbar-item'>
                     Wish List
-                  </a>
                 </Link>
               </div>
             </div>
